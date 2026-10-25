@@ -25,9 +25,9 @@ var products = new List<Product> { ogonek, plamy, storm, vanil, tayga };
 var orders = new List<Order>
 {
     new () {Quantity = 2, Customer = ivan, Product = storm, OrderDate = new DateTime(2025, 12, 8, 10, 0, 0, DateTimeKind.Utc)},
-    new () {Quantity = 4, Customer = ivan, Product = tayga, OrderDate = new DateTime(2025, 12, 9, 14, 0, 0, DateTimeKind.Utc)},
+    new () {Quantity = 4, Customer = ivan, Product = plamy, OrderDate = new DateTime(2025, 12, 9, 14, 0, 0, DateTimeKind.Utc)},
     new () {Quantity = 3, Customer = olga, Product = ogonek, OrderDate = new DateTime(2025, 12, 10, 12, 0, 0, DateTimeKind.Utc)},
-    new () {Quantity = 1, Customer = mikhail, Product = plamy, OrderDate = new DateTime(2025, 12, 11, 9, 0, 0, DateTimeKind.Utc)},
+    new () {Quantity = 1, Customer = mikhail, Product = tayga, OrderDate = new DateTime(2025, 12, 11, 9, 0, 0, DateTimeKind.Utc)},
     new () {Quantity = 6, Customer = dmitry, Product = vanil, OrderDate = new DateTime(2025, 12, 12, 18, 0, 0, DateTimeKind.Utc)}
     /*
     Для того что сказать заказу кто покупатель и какой товар, вместо прямого указания id, 
@@ -136,4 +136,24 @@ db.SaveChanges();
 /*
 Если сохранять заказ и новый остаток то При сбое между ними может произойти ситуация, 
 что заказ был оформлен, но количество на складе не изменилось и наоборот
+*/
+
+Console.WriteLine("=== Шаг 6 ===");
+
+var leaving = db.Customers.First(c => c.Name == "Ольга Смирнова");
+db.Customers.Remove(leaving);
+
+var notInStock = db.Products.Where(p => p.QuantityStock == 0).ToList();
+db.Products.RemoveRange(notInStock);
+
+db.Customers.Remove(ivan);
+
+db.SaveChanges();
+Console.WriteLine($"Количество оставшихся товаров: {db.Products.Count()}");
+/*
+Все его заказы удалились вместе с покупалетел
+Так получилось потому, что EF Core создал вмнешний ключ c ON DELETE CASCADE,
+и при удалении покупателя удаляются и все его заказы
+Для магазина это очень плохо потому что могут начаться проблемы с финансовыми документами
+и данные о продаже товара пропадают
 */
