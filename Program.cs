@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 Console.WriteLine("Магазин спичек «Чирк»: проект запущен!");
 
@@ -90,3 +91,49 @@ foreach (var o in total_price)
     Console.WriteLine($"{o.CustomerName} - {o.ProductTitle} - {o.QuantityProduct} шт. - {o.TotalPrice} ₽");
 
 Console.WriteLine($"Общая выручка: {totalGrand}");
+
+Console.WriteLine("=== Шаг 5 ===");
+
+var customer = db.Customers.First(c => c.Name == "Иван Петров");
+customer.Phone = "+7 900 999-00-00";
+
+var product = db.Products.ToList();
+foreach (var p in product)
+    p.Price *= 1.1m;
+
+var productZero = db.Products.First(p => p.Title.Contains("Тайга"));
+productZero.QuantityStock = 0;
+
+void PlaceAnOrder(Customer cust, Product prod, int quantity)
+{
+    if (prod.QuantityStock >= quantity)
+    {
+        var order = new Order
+        {
+            Quantity = quantity,
+            Customer = cust,
+            Product = prod,
+            OrderDate = DateTime.UtcNow
+        };
+
+        db.Orders.Add(order);
+        prod.QuantityStock -= quantity;
+        Console.WriteLine("Заказ оформлен:\n" +
+        $"Заказчик: {cust.Name}\n" +
+        $"В заказе: {prod.Title}\n"+
+        $"Количество: {quantity}");
+    }
+    else
+    {
+        Console.WriteLine("Недостаточно на складе");
+    }
+}
+
+PlaceAnOrder(mikhail, plamy, 3);
+PlaceAnOrder(ivan, tayga, 10);
+
+db.SaveChanges();
+/*
+Если сохранять заказ и новый остаток то При сбое между ними может произойти ситуация, 
+что заказ был оформлен, но количество на складе не изменилось и наоборот
+*/
